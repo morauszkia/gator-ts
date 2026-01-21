@@ -8,8 +8,13 @@ export async function createUser(name: string) {
 }
 
 export async function getUser(name: string) {
-  const result = await db.select().from(users).where(eq(users.name, name));
-  return result[0];
+  const [result] = await db.select().from(users).where(eq(users.name, name));
+  return result;
+}
+
+export async function getUserById(id: string) {
+  const [result] = await db.select().from(users).where(eq(users.id, id));
+  return result;
 }
 
 export async function deleteAllUsers() {
@@ -19,3 +24,5 @@ export async function deleteAllUsers() {
 export async function getAllUsers() {
   return await db.select().from(users);
 }
+
+export type User = typeof users.$inferSelect;

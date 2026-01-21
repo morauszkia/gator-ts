@@ -1,4 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
+import { readConfig } from "./config";
+import { getUser, getUserById, User } from "./lib/db/queries/users";
+import { createFeed, Feed, getAllFeeds } from "./lib/db/queries/feeds";
 
 type RSSFeed = {
   channel: {
@@ -65,4 +68,31 @@ export async function fetchFeed(url: string) {
   };
 
   return feedData;
+}
+
+function printFeed(feed: Feed, user: User) {
+  console.log(`${feed.name} (${feed.url}) - added by ${user.name}`);
+}
+
+export async function handlerAddFeed(cmdName: string, ...args: string[]) {
+  if (args.length < 2) {
+    throw new Error(`Usage: npm run ${cmdName} <name> <url>`);
+  }
+  const [name, url] = args;
+
+  const currentUserName = readConfig().currentUserName;
+  const currentUser = await getUser(currentUserName);
+
+  const newFeed = await createFeed(name, url, currentUser.id);
+
+  printFeed(newFeed, currentUser);
+}
+
+export async function handlerFeeds(_: string) {
+  const feeds = await getAllFeeds();
+
+  for (const feed of feeds) {
+    const user = await getUserById(feed.userId);
+    printFeed(feed, user);
+  }
 }
