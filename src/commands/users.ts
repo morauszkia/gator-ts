@@ -1,10 +1,10 @@
-import { readConfig, setUser } from "./config";
+import { readConfig, setUser } from "../config";
 import {
   createUser,
   getUser,
   deleteAllUsers,
   getAllUsers,
-} from "./lib/db/queries/users";
+} from "../lib/db/queries/users";
 
 export async function handlerLogin(cmdName: string, ...args: string[]) {
   if (args.length !== 1) {

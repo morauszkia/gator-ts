@@ -25,4 +25,3 @@ export async function getAllUsers() {
   return await db.select().from(users);
 }
 
-export type User = typeof users.$inferSelect;

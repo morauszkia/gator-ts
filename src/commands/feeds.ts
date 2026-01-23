@@ -1,7 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
-import { readConfig } from "./config";
-import { getUser, getUserById, User } from "./lib/db/queries/users";
-import { createFeed, Feed, getAllFeeds } from "./lib/db/queries/feeds";
+import { readConfig } from "../config";
+import { getUser, getUserById } from "../lib/db/queries/users";
+import { createFeed, getAllFeeds } from "../lib/db/queries/feeds";
+import { Feed, User } from "../lib/db/schema";
+import { createFeedFollow } from "src/lib/db/queries/feed_follows";
+import { printFeedFollow } from "./feed_follows";
 
 type RSSFeed = {
   channel: {
@@ -84,8 +87,11 @@ export async function handlerAddFeed(cmdName: string, ...args: string[]) {
   const currentUser = await getUser(currentUserName);
 
   const newFeed = await createFeed(name, url, currentUser.id);
-
+  console.log("Feed created:");
   printFeed(newFeed, currentUser);
+
+  const feedFollow = await createFeedFollow(currentUser.id, newFeed.id);
+  printFeedFollow(feedFollow.userName, feedFollow.feedName);
 }
 
 export async function handlerFeeds(_: string) {
