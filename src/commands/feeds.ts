@@ -1,6 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import { readConfig } from "../config";
-import { getUser, getUserById } from "../lib/db/queries/users";
+import { getUserById } from "../lib/db/queries/users";
 import { createFeed, getAllFeeds } from "../lib/db/queries/feeds";
 import { Feed, User } from "../lib/db/schema";
 import { createFeedFollow } from "src/lib/db/queries/feed_follows";
@@ -77,20 +76,21 @@ function printFeed(feed: Feed, user: User) {
   console.log(`${feed.name} (${feed.url}) - added by ${user.name}`);
 }
 
-export async function handlerAddFeed(cmdName: string, ...args: string[]) {
+export async function handlerAddFeed(
+  cmdName: string,
+  user: User,
+  ...args: string[]
+) {
   if (args.length < 2) {
     throw new Error(`Usage: npm run ${cmdName} <name> <url>`);
   }
   const [name, url] = args;
 
-  const currentUserName = readConfig().currentUserName;
-  const currentUser = await getUser(currentUserName);
-
-  const newFeed = await createFeed(name, url, currentUser.id);
+  const newFeed = await createFeed(name, url, user.id);
   console.log("Feed created:");
-  printFeed(newFeed, currentUser);
+  printFeed(newFeed, user);
 
-  const feedFollow = await createFeedFollow(currentUser.id, newFeed.id);
+  const feedFollow = await createFeedFollow(user.id, newFeed.id);
   printFeedFollow(feedFollow.userName, feedFollow.feedName);
 }
 
