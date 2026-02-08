@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { getNextFeedToFetch, markFeedFetched } from "./db/queries/feeds";
-import { Feed, User } from "./db/schema";
+import { Feed, PostData, User } from "./db/schema";
+import { createPost } from "./db/queries/posts";
 
 export type RSSFeed = {
     channel: {
@@ -77,14 +78,31 @@ export function printFeed(feed: Feed, user: User) {
     console.log(`${feed.name} (${feed.url}) - added by ${user.name}`);
 }
 
-export async function scrapeFeeds() {
-    const nextFeedToFetch = await getNextFeedToFetch();
-
-    const feedData = await fetchFeed(nextFeedToFetch.url);
+async function scrapeFeed(feed: Feed) {
+    await markFeedFetched(feed.id);
+    const feedData = await fetchFeed(feed.url);
 
     for (const item of feedData.channel.item) {
-        console.log(item.title);
+        console.log(`Found post: ${item.title}`);
+
+        await createPost({
+            url: item.link,
+            title: item.title,
+            description: item.description,
+            publishedAt: new Date(item.pubDate),
+            feedId: feed.id,
+        } satisfies PostData);
     }
 
-    await markFeedFetched(nextFeedToFetch.id);
+}
+
+export async function scrapeFeeds() {
+    const nextFeedToFetch = await getNextFeedToFetch();
+    if (!nextFeedToFetch) {
+        console.log("No feeds found to fetch.");
+        return;
+    }
+
+    console.log(`Fetching feed: ${nextFeedToFetch.name}`);
+    await scrapeFeed(nextFeedToFetch);
 }
